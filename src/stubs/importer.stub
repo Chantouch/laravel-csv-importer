@@ -1,0 +1,51 @@
+<?php
+
+namespace DummyNamespace;
+
+use RGilyov\CsvImporter\BaseCsvImporter;
+
+class DummyClass extends BaseCsvImporter
+{
+    /**
+     *  Specify mappings and rules for the csv importer, you also may create csv files to write csv entities
+     *
+     * @return array
+     */
+    public function csvConfigurations()
+    {
+        return [
+            'mappings' => [
+                'name'  => ['required', 'validation' => ['required'], 'cast' => 'string'],
+                'email' => ['validation' => ['email'], 'cast' => 'string']
+            ],
+            'csv_files' => [
+                'valid_entities'   => 'import/valid_entities.csv',
+                'invalid_entities' => 'import/invalid_entities.csv',
+            ]
+        ];
+    }
+
+    /**
+     *  Will be executed for a csv line if it passed validation
+     *
+     * @param $item
+     * @throws \RGilyov\CsvImporter\Exceptions\CsvImporterException
+     * @return void
+     */
+    public function handle($item)
+    {
+        $this->insertTo('valid_entities', $item);
+    }
+
+    /**
+     *  Will be executed if a csv line did not pass validation
+     *
+     * @param $item
+     * @throws \RGilyov\CsvImporter\Exceptions\CsvImporterException
+     * @return void
+     */
+    public function invalid($item)
+    {
+        $this->insertTo('invalid_entities', $item);
+    }
+}

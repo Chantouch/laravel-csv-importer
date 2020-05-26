@@ -1,0 +1,29 @@
+language: php
+
+matrix:
+  include:
+    - php: 5.6
+      env: TESTBENCH_VERSION=3.1.* PHPUNIT_VERSION=5.7.* LARAVEL_VERSION=5.1
+    - php: 7.1
+      env: TESTBENCH_VERSION=3.4.* PHPUNIT_VERSION=6.0.* LARAVEL_VERSION=5.4
+    - php: 7.2
+      env: TESTBENCH_VERSION=3.6.* PHPUNIT_VERSION=7.0.* LARAVEL_VERSION=5.6
+
+services:
+  - memcached
+  - redis-server
+
+before_script:
+    - if [[ $TRAVIS_PHP_VERSION != "hhvm" ]]; then echo "extension = memcached.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi;
+    - if [[ $TRAVIS_PHP_VERSION != "hhvm" ]]; then echo "extension = redis.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi;
+    - composer self-update
+    - composer require orchestra/testbench:${TESTBENCH_VERSION} --no-update
+    - composer require phpunit/phpunit:${PHPUNIT_VERSION} --no-update
+    - composer require laravel/framework:${LARAVEL_VERSION} --no-update
+    - composer install --prefer-source --no-interaction --dev
+    - php tests/Queue/run-queue-app-with-file-cache-driver.php &
+    - php tests/Queue/run-queue-app-with-redis-cache-driver.php &
+    - php tests/Queue/run-queue-app-with-memcached-cache-driver.php &
+
+script:
+  - vendor/bin/phpunit
